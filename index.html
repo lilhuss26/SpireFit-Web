@@ -190,26 +190,6 @@
         
         <div id="message"></div>
         
-        <div class="instructions">
-            <h3>Setup Instructions:</h3>
-            <ol>
-                <li>Create a new Google Sheet</li>
-                <li>Go to Extensions > Apps Script</li>
-                <li>Replace the default code with the script provided below</li>
-                <li>Save the project and deploy it as a web app</li>
-                <li>Set permissions to "Anyone" and copy the generated URL</li>
-                <li>Replace the <code>scriptURL</code> in the JavaScript code below with your URL</li>
-            </ol>
-            <p><strong>Google Apps Script Code:</strong></p>
-            <code>
-                function doPost(e) {<br>
-                &nbsp; var sheet = SpreadsheetApp.getActiveSheet();<br>
-                &nbsp; var data = JSON.parse(e.postData.contents);<br>
-                &nbsp; sheet.appendRow([data.name, data.number, new Date()]);<br>
-                &nbsp; return ContentService.createTextOutput("Success");<br>
-                }
-            </code>
-        </div>
     </div>
 
     <script>
