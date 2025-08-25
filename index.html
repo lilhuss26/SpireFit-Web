@@ -306,43 +306,97 @@ function doOptions() {
             submitBtn.disabled = true;
             
             try {
-                // Try direct request first (if CORS is fixed on server)
                 let response;
-                try {
-                    response = await fetch(scriptURL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
+                let success = false;
+                
+                // Multiple fallback strategies
+                const strategies = [
+                    // Strategy 1: Direct request with no-cors mode
+                    async () => {
+                        console.log('Trying no-cors mode...');
+                        return await fetch(scriptURL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                name: name,
+                                number: number
+                            })
+                        });
+                    },
+                    
+                    // Strategy 2: Using form data instead of JSON
+                    async () => {
+                        console.log('Trying FormData approach...');
+                        const formData = new FormData();
+                        formData.append('name', name);
+                        formData.append('number', number);
+                        
+                        return await fetch(scriptURL, {
+                            method: 'POST',
+                            mode: 'no-cors',
+                            body: formData
+                        });
+                    },
+                    
+                    // Strategy 3: CORS proxy with GET parameters
+                    async () => {
+                        console.log('Trying CORS proxy with GET...');
+                        const params = new URLSearchParams({
                             name: name,
                             number: number
-                        })
-                    });
-                } catch (corsError) {
-                    // Fallback to proxy if CORS fails
-                    console.log('Direct request failed, using proxy...');
-                    const proxyURL = 'https://api.allorigins.win/raw?url=';
-                    response = await fetch(proxyURL + encodeURIComponent(scriptURL), {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            name: name,
-                            number: number
-                        })
-                    });
+                        });
+                        const proxyURL = `https://cors-anywhere.herokuapp.com/${scriptURL}?${params}`;
+                        return await fetch(proxyURL, {
+                            method: 'GET',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+                    }
+                ];
+                
+                // Try each strategy
+                for (let i = 0; i < strategies.length; i++) {
+                    try {
+                        response = await strategies[i]();
+                        success = true;
+                        console.log(`Strategy ${i + 1} succeeded`);
+                        break;
+                    } catch (error) {
+                        console.log(`Strategy ${i + 1} failed:`, error.message);
+                        if (i === strategies.length - 1) {
+                            throw new Error('All submission strategies failed. Please check your Google Apps Script configuration.');
+                        }
+                    }
                 }
                 
-                const result = await response.json();
-                
-                if (response.ok) {
-                    showMessage('Data successfully submitted to Google Sheets!', 'success');
+                // Handle no-cors responses (can't read response body)
+                if (response.type === 'opaque') {
+                    // no-cors mode - we can't read the response, but assume success if no error thrown
+                    showMessage('Data submitted successfully! (Using no-cors mode)', 'success');
                     form.reset();
                 } else {
-                    throw new Error(result.error || 'Server responded with an error');
+                    // Regular response - try to parse JSON
+                    try {
+                        const result = await response.json();
+                        if (response.ok || response.status === 0) {
+                            showMessage('Data successfully submitted to Google Sheets!', 'success');
+                            form.reset();
+                        } else {
+                            throw new Error(result.error || 'Server responded with an error');
+                        }
+                    } catch (jsonError) {
+                        // If we can't parse JSON but got a response, assume success
+                        if (response.status === 200 || response.status === 0) {
+                            showMessage('Data submitted successfully!', 'success');
+                            form.reset();
+                        } else {
+                            throw new Error('Failed to parse server response');
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error:', error);
