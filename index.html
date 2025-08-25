@@ -178,22 +178,24 @@
             submitBtn.disabled = true;
             
             try {
-                // GitHub Pages requires no-cors mode for external requests
+                // Send as JSON to match your script's expectation
                 const response = await fetch(scriptURL, {
                     method: 'POST',
-                    mode: 'no-cors',
                     headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Content-Type': 'application/json',
                     },
-                    body: new URLSearchParams({
+                    body: JSON.stringify({
                         name: name,
                         number: number
                     })
                 });
                 
-                // With no-cors mode, we can't check response.ok, so assume success
-                showMessage('Data successfully submitted to Google Sheets!', 'success');
-                form.reset();
+                if (response.ok) {
+                    showMessage('Data successfully submitted to Google Sheets!', 'success');
+                    form.reset();
+                } else {
+                    throw new Error('Server responded with an error');
+                }
             } catch (error) {
                 console.error('Error:', error);
                 showMessage('Error submitting data. Please check the console for details.', 'error');
