@@ -202,6 +202,15 @@
             border-radius: 8px;
             border-left: 4px solid #ffc107;
         }
+        
+        .debug-info {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 8px;
+            border-left: 4px solid #2196f3;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -209,14 +218,14 @@
         <div class="social-links">
             <a href="https://www.facebook.com/profile.php?id=61579611306232&rdid=Gzss4BDjCM4FwH73&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1VDZaUwm3r%2F" target="_blank">
                 <svg class="facebook-icon" viewBox="0 0 24 24" fill="white">
-                    <path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 6.53 17.5 2.04 12 2.04Z" />
+                    <path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96C18.34 21.21 22 17.06 22 12.06C22 极速6.53 17.5 2.04 12 2.04Z" />
                 </svg>
             </a>
         </div>
         
         <div class="header">
             <div class="logo">SpireFit Logo</div>
-            <h1>Join SpireFit Community</h1>
+            <h1>Join SpireFit Community 1</h1>
         </div>
         
         <form id="dataForm">
@@ -237,68 +246,20 @@
         
         <div id="message"></div>
         
-        <div class="cors-fix">
-            <h3>Updated Google Apps Script Code</h3>
-            <p>Replace your current Google Apps Script with this updated version:</p>
-            <pre><code>function doPost(e) {
-  try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('SpireFit') || 
-                SpreadsheetApp.getActiveSpreadsheet().getSheets()[0];
-    
-    // Parse the incoming data
-    var data;
-    if (e.postData && e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } else {
-      // Fallback for different data formats
-      data = e.parameter;
-    }
-    
-    // Get values from the parsed data
-    var name = data.name || '';
-    var number = data.number || '';
-    
-    // Append to the sheet
-    sheet.appendRow([name, number, new Date()]);
-    
-    // Return success response with CORS headers
-    return ContentService
-      .createTextOutput(JSON.stringify({result: "success", data: {name: name, number: number}}))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      });
-  } catch (error) {
-    // Return error response with CORS headers
-    return ContentService
-      .createTextOutput(JSON.stringify({result: "error", error: error.message}))
-      .setMimeType(ContentService.MimeType.JSON)
-      .setHeaders({
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
-      });
-  }
-}
-
-// Handle preflight OPTIONS request for CORS
-function doOptions() {
-  return ContentService
-    .createTextOutput('')
-    .setHeaders({
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type'
-    });
-}</code></pre>
+        <div class="debug-info">
+            <h3>Debug Information</h3>
+            <p>If data isn't saving to your sheet, make sure:</p>
+            <ol>
+                <li>You've deployed your Google Apps Script as a <strong>Web App</strong> with "Execute as: Me" and "Who has access: Anyone"</li>
+                <li>Your sheet has a tab named <strong>SpireFit</strong> (case sensitive)</li>
+                <li>You've replaced the scriptURL in the JavaScript with your Web App URL</li>
+            </ol>
         </div>
     </div>
 
     <script>
         // Replace this with your Google Apps Script Web App URL
-        const scriptURL = 'https://script.google.com/macros/s/AKfycbw5D4_YQF5DJOOGZkpM8d_cZDnHZlmGNNYycK9aAbrP_SaBucu2LQ0nQtMVVXV3cyRsWw/exec';
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwYMMiCVeapq7UL21X3ffpjG7wW2C9HtyDnIC7zDnxsatOrnLQt953iRt2lTUhlzWZNsQ/exec';
         
         const form = document.getElementById('dataForm');
         const messageDiv = document.getElementById('message');
@@ -315,27 +276,15 @@ function doOptions() {
             submitBtn.disabled = true;
             
             try {
-                // Create form data
+                // Send data as FormData (more reliable with Google Apps Script)
                 const formData = new FormData();
                 formData.append('name', name);
                 formData.append('number', number);
                 
-                // Try direct POST request first
-                let response = await fetch(scriptURL, {
+                const response = await fetch(scriptURL, {
                     method: 'POST',
                     body: formData
                 });
-                
-                // If direct POST fails, try with JSON
-                if (!response.ok) {
-                    response = await fetch(scriptURL, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({name, number})
-                    });
-                }
                 
                 const result = await response.json();
                 
@@ -347,7 +296,7 @@ function doOptions() {
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showMessage('Error: ' + error.message + '. Please check the console for details.', 'error');
+                showMessage('Error: ' + error.message, 'error');
             } finally {
                 submitBtn.innerHTML = 'Submit to Google Sheets';
                 submitBtn.disabled = false;
