@@ -238,8 +238,8 @@
         <div id="message"></div>
         
         <div class="cors-fix">
-            <h3>CORS Issue Detected</h3>
-            <p>Your form is experiencing a CORS error. To fix this, you need to update your Google Apps Script to handle CORS properly.</p>
+            <h3>CORS Solutions Implemented</h3>
+            <p>This form now tries direct connection first, then falls back to a proxy if needed. For best performance, update your Google Apps Script:</p>
             <p>Replace your current script with this version:</p>
             <pre><code>function doPost(e) {
   try {
@@ -306,18 +306,35 @@ function doOptions() {
             submitBtn.disabled = true;
             
             try {
-                // Using a proxy to avoid CORS issues
-                const proxyURL = 'https://corsproxy.io/?';
-                const response = await fetch(proxyURL + encodeURIComponent(scriptURL), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        number: number
-                    })
-                });
+                // Try direct request first (if CORS is fixed on server)
+                let response;
+                try {
+                    response = await fetch(scriptURL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            number: number
+                        })
+                    });
+                } catch (corsError) {
+                    // Fallback to proxy if CORS fails
+                    console.log('Direct request failed, using proxy...');
+                    const proxyURL = 'https://api.allorigins.win/raw?url=';
+                    response = await fetch(proxyURL + encodeURIComponent(scriptURL), {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            number: number
+                        })
+                    });
+                }
                 
                 const result = await response.json();
                 
